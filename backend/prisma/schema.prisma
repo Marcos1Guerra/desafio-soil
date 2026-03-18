@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Ex: postgresql://admin:adminpassword@localhost:5432/soil_db?schema=public
+}
+
+model Farm {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  latitude  Float
+  longitude Float
+  
+  pivots    Pivot[]  // Relação 1:N com Pivot
+}
+
+model Pivot {
+  id         String   @id @default(uuid()) @db.Uuid
+  farmId     String   @db.Uuid
+  name       String
+  latitude   Float
+  longitude  Float
+  status     Json?    // Armazena o último payload MQTT recebido
+  bladeAt100 Float    // Lâmina de água a 100%
+  
+  farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  states     State[]  // Relação 1:N com State
+}
+
+model State {
+  id           String   @id @default(uuid()) @db.Uuid
+  pivotId      String   @db.Uuid
+  timestamp    DateTime @default(now())
+  isOn         Boolean
+  direction    String   // Ex: clockwise, counter-clockwise
+  isIrrigating Boolean
+
+  pivot        Pivot    @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  cycles       Cycle[]  // Relação 1:N com Cycles
+}
+
+model Cycle {
+  id            String   @id @default(uuid()) @db.Uuid
+  stateId       String   @db.Uuid
+  timestamp     DateTime @default(now())
+  angle         Float
+  percentimeter Float
+
+  state         State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  
+  @@map("Cycles") // Mapeia para o nome plural no banco, conforme o desafio
+}
+
+enum Role {
+  ADMIN
+  OPERADOR
+  VISUALIZADOR
+}
+
+model User {
+  id       String @id @default(uuid()) @db.Uuid
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(VISUALIZADOR)
+}

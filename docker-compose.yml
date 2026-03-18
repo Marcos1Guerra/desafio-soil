@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik_proxy
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - soil_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: soil_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: soil_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - soil_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: soil_redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - soil_network
+
+  backend:
+    build: ./backend
+    container_name: soil_backend
+    environment:
+      - DATABASE_URL=postgresql://admin:adminpassword@postgres:5432/soil_db?schema=public
+      - JWT_SECRET=chave-secreta-super-segura
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - soil_network
+
+  frontend:
+    build: ./frontend
+    container_name: soil_frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - soil_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  soil_network:
+    driver: bridge
