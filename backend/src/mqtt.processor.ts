@@ -16,6 +16,7 @@ export class MqttProcessor extends WorkerHost {
     const { topic, payload } = job.data;
     const pivotId = topic.split('/')[2];
 
+
     await this.prisma.pivot.update({
       where: { id: pivotId },
       data: { status: payload },
@@ -34,6 +35,7 @@ export class MqttProcessor extends WorkerHost {
             isOn: true,
             direction: payload.direction,
             isIrrigating: payload.isIrrigating,
+            timestamp: new Date(),
           },
         });
       } else {
@@ -49,8 +51,9 @@ export class MqttProcessor extends WorkerHost {
       await this.prisma.cycle.create({
         data: {
           stateId: activeState.id,
-          angle: payload.angle,
-          percentimeter: payload.percentimeter,
+          angle: payload.angle ?? 0,
+          percentimeter: payload.percentimeter ?? 0,
+          timestamp: new Date(),
         },
       });
       
@@ -60,6 +63,7 @@ export class MqttProcessor extends WorkerHost {
         data: { isOn: false },
       });
     }
+
     this.eventsGateway.sendPivotUpdate(pivotId, payload);
 
     return {};

@@ -1,26 +1,37 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { PivotService } from './pivot.service';
 import { CreatePivotDto } from './dto/create-pivot.dto';
 import { UpdatePivotDto } from './dto/update-pivot.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { PivotCommandDto } from './dto/pivot-command.dto';
 
 @Controller('pivot')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PivotController {
   constructor(private readonly pivotService: PivotService) {}
 
-  @Post()
+  @Post(':id/command')
   @Roles('ADMIN', 'OPERADOR')
-  create(@Body() createPivotDto: CreatePivotDto) {
-    return this.pivotService.create(createPivotDto);
+  async sendCommand(@Param('id') id: string, @Body() command: PivotCommandDto) {
+    return this.pivotService.sendCommand(id, command);
   }
 
   @Get()
   @Roles('ADMIN', 'OPERADOR', 'VISUALIZADOR')
-  findAll() {
-    return this.pivotService.findAll();
+  findAll(@Query('farmId') farmId?: string) {
+    return this.pivotService.findAll(farmId);
   }
 
   @Get(':id')
@@ -31,8 +42,12 @@ export class PivotController {
 
   @Get(':id/history')
   @Roles('ADMIN', 'OPERADOR', 'VISUALIZADOR')
-  getHistory(@Param('id') id: string) {
-    return this.pivotService.getHistory(id);
+  getHistory(
+    @Param('id') id: string,
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+  ) {
+    return this.pivotService.getHistory(id, start, end);
   }
 
   @Patch(':id')

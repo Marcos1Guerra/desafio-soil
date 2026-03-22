@@ -7,12 +7,14 @@ import { MqttProcessor } from './mqtt.processor';
 import { MqttService } from './mqtt.service';
 import { AuthModule } from './auth/auth.module';
 import { EventsGateway } from './events.gateway';
+import { FarmModule } from './farm/farm.module';
+import { PivotModule } from './pivot/pivot.module';
 
 @Module({
   imports: [
     BullModule.forRoot({
       connection: {
-        host: 'localhost',
+        host: process.env.REDIS_HOST || 'redis',
         port: 6379,
       },
     }),
@@ -20,6 +22,8 @@ import { EventsGateway } from './events.gateway';
       name: 'mqtt-packets',
     }),
     AuthModule,
+    FarmModule,
+    PivotModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, MqttProcessor, MqttService, EventsGateway],

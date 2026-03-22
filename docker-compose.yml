@@ -24,6 +24,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: adminpassword
       POSTGRES_DB: soil_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -32,39 +34,47 @@ services:
   redis:
     image: redis:7-alpine
     container_name: soil_redis
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - soil_network
 
   backend:
-    build: ./backend
-    container_name: soil_backend
-    environment:
-      - DATABASE_URL=postgresql://admin:adminpassword@postgres:5432/soil_db?schema=public
-      - JWT_SECRET=chave-secreta-super-segura
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
-      - "traefik.http.services.backend.loadbalancer.server.port=3000"
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - soil_network
+      build: ./backend
+      container_name: soil_backend
+      ports:
+        - "3001:3001"
+      environment:
+        - DATABASE_URL=postgresql://admin:adminpassword@postgres:5432/soil_db?schema=public
+        - JWT_SECRET=chave-secreta-super-segura
+        - REDIS_HOST=redis
+        - REDIS_PORT=6379
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+        - "traefik.http.services.backend.loadbalancer.server.port=3001"
+      depends_on:
+        - postgres
+        - redis
+      networks:
+        - soil_network
 
   frontend:
-    build: ./frontend
-    container_name: soil_frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-    networks:
-      - soil_network
-
+      build: ./frontend
+      container_name: soil_frontend
+      ports:
+        - "3000:3000"
+      environment:
+        - NEXT_PUBLIC_API_URL=http://api.localhost
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=3000" # Corrigido de 3001 para 3000
+      networks:
+        - soil_network
+        
 volumes:
   postgres_data:
   redis_data:

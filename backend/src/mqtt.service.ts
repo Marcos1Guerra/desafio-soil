@@ -13,7 +13,7 @@ export class MqttService implements OnModuleInit {
 
     this.client.on('connect', () => {
       console.log('Conectado ao MQTT Broker!');
-      this.client.subscribe('soil/pivots/#'); // Escuta todos os tópicos de pivôs
+      this.client.subscribe('soil/pivots/#');
     });
 
     this.client.on('message', async (topic, message) => {
