@@ -61,5 +61,7 @@ Para facilitar os testes de avaliação, você pode acessar o sistema utilizando
 - **Senha**: 123
 
 ## 📡 Simulação de Telemetria (IoT)
-Para validar o funcionamento dos WebSockets e da fila Redis, utilize o script de simulação incluído:
+Para validar o funcionamento dos WebSockets e da fila Redis, utilize o script de simulação:
+```bash
    node simulator.js
+```
