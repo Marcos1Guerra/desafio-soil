@@ -34,7 +34,7 @@ A solução foi desenhada seguindo princípios de **Sistemas Distribuídos** e *
 
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/Marcos1Guerra/desafio-soil.git](https://github.com/Marcos1Guerra/desafio-soil.git)
+   git clone https://github.com/Marcos1Guerra/desafio-soil.git
    ```
 
 2. Configure as variáveis de ambiente:
